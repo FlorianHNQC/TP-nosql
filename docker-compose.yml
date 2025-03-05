@@ -1,0 +1,41 @@
+version: '3.8'
+
+networks:
+  ntwrk: ### à revoir si possible
+    driver: bridge
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_service
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - ntwrk
+
+  app:
+    build: ./app
+    container_name: node_app
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URI: "mongodb://admin:password@mongodb:27017/mflix?authSource=admin"
+    volumes:
+      - ./app:/usr/src/app
+    working_dir: /usr/src/app
+    command: "node server.js"
+    networks:
+      - ntwrk
+
+volumes:
+  mongodb_data:
+    driver: local
